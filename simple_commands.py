@@ -82,7 +82,8 @@ def modes(update: Update, context: CallbackContext):
       " 🎻 The Classic mode uses the conventional UNO deck and there is no auto skip.\n"
       " 🚀 The Sanic mode uses the conventional UNO deck and the bot automatically skips a player if he/she takes too long to play its turn\n"
       " 🐉 The Wild mode uses a deck with more special cards, less number variety and no auto skip.\n"
-      " ✍️ The Text mode uses the conventional UNO deck but instead of stickers it uses the text.\n\n"
+      " ✍️ The Text mode uses the conventional UNO deck but instead of stickers it uses the text.\n"
+      " 🧇 The Waffle mode uses the conventional UNO deck and the bot automatically skips a player after 15 seconds.\n\n"
       "To change the game mode, the GAME CREATOR has to type the bot nickname and a space, "
       "just like when playing a card, and all gamemode options should appear.")
     send_async(context.bot, update.message.chat_id, text=modes_explanation,
