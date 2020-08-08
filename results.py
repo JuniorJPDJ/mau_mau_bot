@@ -140,6 +140,18 @@ def add_mode_text(results):
             InputTextMessageContent(_('Text ✍️'))
         )
     )
+
+
+def add_mode_waffle(results):
+    """Change mode to waffle"""
+    results.append(
+        InlineQueryResultArticle(
+            "mode_waffle",
+            title=_("🧇 Waffle mode"),
+            input_message_content=
+            InputTextMessageContent(_('Waffle kurwa 🧇'))
+        )
+    )
     
     
 def add_draw(player, results):
