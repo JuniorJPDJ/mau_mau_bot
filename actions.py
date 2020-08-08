@@ -34,7 +34,26 @@ def do_skip(bot, player, job_queue=None):
     skipped_player = game.current_player
     next_player = game.current_player.next
 
-    if skipped_player.waiting_time > 0:
+    if game.mode == "waffle":
+        try:
+            skipped_player.draw()
+        except DeckEmptyError:
+            pass
+
+        send_async(bot, chat.id,
+                   text=__("{name1} ran out of time "
+                        "and has been skipped.\n"
+                        "Next player: {name2}")
+                   .format(name1=display_name(skipped_player.user),
+                           name2=display_name(next_player.user))
+        )
+        logger.info("{player} was skipped! "
+                    .format(player=display_name(player.user)))
+        game.turn()
+        if job_queue:
+            start_player_countdown(bot, game, job_queue)
+
+    elif skipped_player.waiting_time > 0:
         skipped_player.anti_cheat += 1
         skipped_player.waiting_time -= TIME_REMOVAL_AFTER_SKIP
         if (skipped_player.waiting_time < 0):
@@ -188,10 +207,12 @@ def start_player_countdown(bot, game, job_queue):
     player = game.current_player
     time = player.waiting_time
 
-    if time < MIN_FAST_TURN_TIME:
+    if game.mode == "waffle":
+        time = 15
+    elif time < MIN_FAST_TURN_TIME:
         time = MIN_FAST_TURN_TIME
 
-    if game.mode == 'fast':
+    if game.mode == 'fast' or game.mode == "waffle":
         if game.job:
             try:
                 game.job.schedule_removal()
