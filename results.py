@@ -140,8 +140,20 @@ def add_mode_text(results, anti_cheat):
             InputTextMessageContent(_('Text ✍️'))
         )
     )
-    
-    
+
+
+def add_mode_waffle(results, anti_cheat):
+    """Change mode to waffle"""
+    results.append(
+        InlineQueryResultArticle(
+            f"mode_waffle:{anti_cheat}",
+            title=_("🧇 Waffle mode"),
+            input_message_content=
+            InputTextMessageContent(_('Waffle kurwa 🧇'))
+        )
+    )
+
+
 def add_draw(player, results, anti_cheat):
     """Add option to draw"""
     n = player.game.draw_counter or 1
