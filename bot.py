@@ -38,7 +38,7 @@ from errors import (NoGameInChatError, LobbyClosedError, AlreadyJoinedError,
 from internationalization import _, __, user_locale, game_locales
 from results import (add_call_bluff, add_choose_color, add_draw, add_gameinfo,
                      add_no_game, add_not_started, add_other_cards, add_pass,
-                     add_card, add_mode_classic, add_mode_fast, add_mode_wild, add_mode_text)
+                     add_card, add_mode_classic, add_mode_fast, add_mode_wild, add_mode_text, add_mode_waffle)
 from shared_vars import gm, application
 from simple_commands import help_handler
 from utils import display_name
@@ -587,6 +587,7 @@ async def reply_to_query(update: Update, context: CallbackContext):
                 add_mode_fast(results, player.anti_cheat)
                 add_mode_wild(results, player.anti_cheat)
                 add_mode_text(results, player.anti_cheat)
+                add_mode_waffle(results, player.anti_cheat)
             else:
                 add_not_started(results, player.anti_cheat)
 
