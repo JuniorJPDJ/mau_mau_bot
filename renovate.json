@@ -35,7 +35,7 @@
     "ghcr.io/jh0ker/mau_mau_bot",
     "ghcr.io/juniorjpdj/mau_mau_bot"
   ],
-  "baseBranches": [
+  "baseBranchPatterns": [
     "master"
   ],
   "forkProcessing": "enabled"
