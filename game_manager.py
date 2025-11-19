@@ -24,7 +24,7 @@ from game import Game
 from player import Player
 from errors import (AlreadyJoinedError, LobbyClosedError, NoGameInChatError,
                     NotEnoughPlayersError)
-from promotions import send_promotion_async
+from promotions import send_promotion
 
 class GameManager(object):
     """ Manages all running games by using a confusing amount of dicts """
@@ -57,7 +57,7 @@ class GameManager(object):
         self.chatid_games[chat_id].append(game)
         return game
 
-    def join_game(self, user, chat):
+    async def join_game(self, user, chat):
         """ Create a player from the Telegram user and add it to the game """
         self.logger.info("Joining game with id " + str(chat.id))
 
@@ -74,18 +74,18 @@ class GameManager(object):
 
         players = self.userid_players[user.id]
 
-        # Don not re-add a player and remove the player from previous games in
+        # Do not re-add a player and remove the player from previous games in
         # this chat, if he is in one of them
         for player in players:
             if player in game.players:
                 raise AlreadyJoinedError()
 
         try:
-            self.leave_game(user, chat)
+            await self.leave_game(user, chat)
         except NoGameInChatError:
             pass
         except NotEnoughPlayersError:
-            self.end_game(chat, user)
+            await self.end_game(chat, user)
 
             if user.id not in self.userid_players:
                 self.userid_players[user.id] = list()
@@ -99,7 +99,7 @@ class GameManager(object):
         players.append(player)
         self.userid_current[user.id] = player
 
-    def leave_game(self, user, chat):
+    async def leave_game(self, user, chat):
         """ Remove a player from its current game """
 
         player = self.player_for_user_in_chat(user, chat)
@@ -137,13 +137,13 @@ class GameManager(object):
                 del self.userid_current[user.id]
                 del self.userid_players[user.id]
 
-    def end_game(self, chat, user):
+    async def end_game(self, chat, user):
         """
         End a game
         """
 
         self.logger.info("Game in chat " + str(chat.id) + " ended")
-        send_promotion_async(chat, chance=0.15)
+        await send_promotion(chat, chance=0.15)
 
         # Find the correct game instance to end
         player = self.player_for_user_in_chat(user, chat)

@@ -2,6 +2,7 @@
 # Source: http://code.activestate.com/recipes/325905-memoize-decorator-with-timeout/#c1
 
 import time
+import inspect
 
 class MWT(object):
     """Memoize With Timeout"""
@@ -24,18 +25,28 @@ class MWT(object):
         self.cache = self._caches[f] = {}
         self._timeouts[f] = self.timeout
 
-        def func(*args, **kwargs):
-            kw = sorted(kwargs.items())
-            key = (args, tuple(kw))
-            try:
-                v = self.cache[key]
-                print("cache")
-                if (time.time() - v[1]) > self.timeout:
-                    raise KeyError
-            except KeyError:
-                print("new")
-                v = self.cache[key] = f(*args,**kwargs),time.time()
-            return v[0]
-        func.func_name = f.__name__
+        if inspect.iscoroutinefunction(f):
+            async def func(*args, **kwargs):
+                kw = sorted(kwargs.items())
+                key = (args, tuple(kw))
+                try:
+                    v = self.cache[key]
+                    if (time.time() - v[1]) > self.timeout:
+                        raise KeyError
+                except KeyError:
+                    v = self.cache[key] = await f(*args, **kwargs), time.time()
+                return v[0]
+        else:
+            def func(*args, **kwargs):
+                kw = sorted(kwargs.items())
+                key = (args, tuple(kw))
+                try:
+                    v = self.cache[key]
+                    if (time.time() - v[1]) > self.timeout:
+                        raise KeyError
+                except KeyError:
+                    v = self.cache[key] = f(*args, **kwargs), time.time()
+                return v[0]
 
+        func.__name__ = f.__name__
         return func

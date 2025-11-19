@@ -33,16 +33,16 @@ GETTEXT_DIR = 'locales'
 class _Underscore(object):
     """Class to emulate flufl.i18n behaviour, but with plural support"""
     def __init__(self):
-        self.translators = {
-            locale: gettext.GNUTranslations(
-                open(gettext.find(
-                    GETTEXT_DOMAIN, GETTEXT_DIR, languages=[locale]
-                ), 'rb')
-            )
-            for locale
-            in available_locales.keys()
-            if locale != 'en_US'  # No translation file for en_US
-        }
+        self.translators = {}
+        for locale in available_locales.keys():
+            if locale == 'en_US':
+                continue
+            path = gettext.find(GETTEXT_DOMAIN, GETTEXT_DIR, languages=[locale])
+            if path:
+                try:
+                    self.translators[locale] = gettext.GNUTranslations(open(path, 'rb'))
+                except IOError:
+                    pass
         self.locale_stack = list()
 
     def push(self, locale):
@@ -100,53 +100,54 @@ def __(singular, plural=None, n=1, multi=False):
 
 def user_locale(func):
     @wraps(func)
-    @db_session
-    def wrapped(update, context, *pargs, **kwargs):
-        user = _user_chat_from_update(update)[0]
-
+    async def wrapped(update, context, *pargs, **kwargs):
         with db_session:
+            user = _user_chat_from_update(update)[0]
             us = UserSetting.get(id=user.id)
 
-        if us and us.lang != 'en':
-            _.push(us.lang)
-        else:
-            _.push('en_US')
+            if us and us.lang != 'en':
+                _.push(us.lang)
+            else:
+                _.push('en_US')
 
-        result = func(update, context, *pargs, **kwargs)
-        _.pop()
-        return result
+            try:
+                result = await func(update, context, *pargs, **kwargs)
+            finally:
+                _.pop()
+            return result
     return wrapped
 
 
 def game_locales(func):
     @wraps(func)
-    @db_session
-    def wrapped(update, context, *pargs, **kwargs):
-        user, chat = _user_chat_from_update(update)
-        player = gm.player_for_user_in_chat(user, chat)
-        locales = list()
+    async def wrapped(update, context, *pargs, **kwargs):
+        with db_session:
+            user, chat = _user_chat_from_update(update)
+            player = gm.player_for_user_in_chat(user, chat)
+            locales = list()
 
-        if player:
-            for player in player.game.players:
-                us = UserSetting.get(id=player.user.id)
+            if player:
+                for player in player.game.players:
+                    us = UserSetting.get(id=player.user.id)
 
-                if us and us.lang != 'en':
-                    loc = us.lang
-                else:
-                    loc = 'en_US'
+                    if us and us.lang != 'en':
+                        loc = us.lang
+                    else:
+                        loc = 'en_US'
 
-                if loc in locales:
-                    continue
+                    if loc in locales:
+                        continue
 
-                _.push(loc)
-                locales.append(loc)
+                    _.push(loc)
+                    locales.append(loc)
 
-        result = func(update, context, *pargs, **kwargs)
+            try:
+                result = await func(update, context, *pargs, **kwargs)
+            finally:
+                while _.code:
+                    _.pop()
 
-        while _.code:
-            _.pop()
-
-        return result
+            return result
     return wrapped
 
 
