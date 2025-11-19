@@ -30,12 +30,12 @@ from utils import display_color, display_color_group, display_name
 from internationalization import _, __
 
 
-def add_choose_color(results, game):
+def add_choose_color(results, game, anti_cheat):
     """Add choose color options"""
     for color in c.COLORS:
         results.append(
             InlineQueryResultArticle(
-                id=color,
+                id=f"{color}:{anti_cheat}",
                 title=_("Choose Color"),
                 description=display_color(color),
                 input_message_content=
@@ -44,12 +44,12 @@ def add_choose_color(results, game):
         )
 
 
-def add_other_cards(player, results, game):
+def add_other_cards(player, results, game, anti_cheat):
     """Add hand cards when choosing colors"""
 
     results.append(
         InlineQueryResultArticle(
-            "hand",
+            f"hand:{anti_cheat}",
             title=_("Card (tap for game state):",
                     "Cards (tap for game state):",
                     len(player.cards)),
@@ -82,11 +82,11 @@ def add_no_game(results):
     )
 
 
-def add_not_started(results):
+def add_not_started(results, anti_cheat):
     """Add text result if the game has not yet started"""
     results.append(
         InlineQueryResultArticle(
-            "nogame",
+            f"nogame:{anti_cheat}",
             title=_("The game wasn't started yet"),
             input_message_content=
             InputTextMessageContent(_('Start the game with /start'))
@@ -94,11 +94,11 @@ def add_not_started(results):
     )
 
 
-def add_mode_classic(results):
+def add_mode_classic(results, anti_cheat):
     """Change mode to classic"""
     results.append(
         InlineQueryResultArticle(
-            "mode_classic",
+            f"mode_classic:{anti_cheat}",
             title=_("🎻 Classic mode"),
             input_message_content=
             InputTextMessageContent(_('Classic 🎻'))
@@ -106,11 +106,11 @@ def add_mode_classic(results):
     )
 
 
-def add_mode_fast(results):
+def add_mode_fast(results, anti_cheat):
     """Change mode to classic"""
     results.append(
         InlineQueryResultArticle(
-            "mode_fast",
+            f"mode_fast:{anti_cheat}",
             title=_("🚀 Sanic mode"),
             input_message_content=
             InputTextMessageContent(_('Gotta go fast! 🚀'))
@@ -118,11 +118,11 @@ def add_mode_fast(results):
     )
 
 
-def add_mode_wild(results):
+def add_mode_wild(results, anti_cheat):
     """Change mode to classic"""
     results.append(
         InlineQueryResultArticle(
-            "mode_wild",
+            f"mode_wild:{anti_cheat}",
             title=_("🐉 Wild mode"),
             input_message_content=
             InputTextMessageContent(_('Into the Wild~ 🐉'))
@@ -130,11 +130,11 @@ def add_mode_wild(results):
     )
 
 
-def add_mode_text(results):
+def add_mode_text(results, anti_cheat):
     """Change mode to text"""
     results.append(
         InlineQueryResultArticle(
-            "mode_text",
+            f"mode_text:{anti_cheat}",
             title=_("✍️ Text mode"),
             input_message_content=
             InputTextMessageContent(_('Text ✍️'))
@@ -142,13 +142,13 @@ def add_mode_text(results):
     )
     
     
-def add_draw(player, results):
+def add_draw(player, results, anti_cheat):
     """Add option to draw"""
     n = player.game.draw_counter or 1
 
     results.append(
         Sticker(
-            "draw", sticker_file_id=c.STICKERS['option_draw'],
+            f"draw:{anti_cheat}", sticker_file_id=c.STICKERS['option_draw'],
             input_message_content=
             InputTextMessageContent(__('Drawing {number} card',
                                        'Drawing {number} cards', n,
@@ -158,23 +158,23 @@ def add_draw(player, results):
     )
 
 
-def add_gameinfo(game, results):
+def add_gameinfo(game, results, anti_cheat):
     """Add option to show game info"""
 
     results.append(
         Sticker(
-            "gameinfo",
+            f"gameinfo:{anti_cheat}",
             sticker_file_id=c.STICKERS['option_info'],
             input_message_content=game_info(game)
         )
     )
 
 
-def add_pass(results, game):
+def add_pass(results, game, anti_cheat):
     """Add option to pass"""
     results.append(
         Sticker(
-            "pass", sticker_file_id=c.STICKERS['option_pass'],
+            f"pass:{anti_cheat}", sticker_file_id=c.STICKERS['option_pass'],
             input_message_content=InputTextMessageContent(
                 __('Pass', multi=game.translate)
             )
@@ -182,11 +182,11 @@ def add_pass(results, game):
     )
 
 
-def add_call_bluff(results, game):
+def add_call_bluff(results, game, anti_cheat):
     """Add option to call a bluff"""
     results.append(
         Sticker(
-            "call_bluff",
+            f"call_bluff:{anti_cheat}",
             sticker_file_id=c.STICKERS['option_bluff'],
             input_message_content=
             InputTextMessageContent(__("I'm calling your bluff!",
@@ -195,21 +195,21 @@ def add_call_bluff(results, game):
     )
 
 
-def add_card(game, card, results, can_play):
+def add_card(game, card, results, can_play, anti_cheat):
     """Add an option that represents a card"""
 
     if can_play:
         if game.mode != "text":
             results.append(
-                Sticker(str(card), sticker_file_id=c.STICKERS[str(card)])
+                Sticker(f"{card}:{anti_cheat}", sticker_file_id=c.STICKERS[str(card)])
         )
         if game.mode == "text":
             results.append(
-                Sticker(str(card), sticker_file_id=c.STICKERS[str(card)], input_message_content=InputTextMessageContent("Card Played: {card}".format(card=repr(card).replace('Draw Four', '+4').replace('Draw', '+2').replace('Colorchooser', 'Color Chooser')))
+                Sticker(f"{card}:{anti_cheat}", sticker_file_id=c.STICKERS[str(card)], input_message_content=InputTextMessageContent("Card Played: {card}".format(card=repr(card).replace('Draw Four', '+4').replace('Draw', '+2').replace('Colorchooser', 'Color Chooser')))
         ))
     else:
         results.append(
-            Sticker(str(uuid4()), sticker_file_id=c.STICKERS_GREY[str(card)],
+            Sticker(f"{uuid4()}:{anti_cheat}", sticker_file_id=c.STICKERS_GREY[str(card)],
                     input_message_content=game_info(game))
         )
 

@@ -24,7 +24,7 @@ from telegram.ext import CallbackContext
 
 from internationalization import _, __
 from mwt import MWT
-from shared_vars import gm, dispatcher
+from shared_vars import gm
 
 logger = logging.getLogger(__name__)
 
@@ -77,31 +77,15 @@ def display_color_group(color, game):
             emoji='💛')
 
 
-def error(update: Update, context: CallbackContext):
-    """Simple error handler"""
-    logger.exception(context.error)
+async def error(update: Update = None, context: CallbackContext = None, exc: Exception = None):
+    if context is not None and getattr(context, 'error', None) is not None:
+        logger.exception(context.error)
+    elif exc is not None:
+        logger.exception(exc)
+    else:
+        logger.exception("An error occurred, but no exception was provided by context.")
 
 
-def send_async(bot, *args, **kwargs):
-    """Send a message asynchronously"""
-    if 'timeout' not in kwargs:
-        kwargs['timeout'] = TIMEOUT
-
-    try:
-        dispatcher.run_async(bot.sendMessage, *args, **kwargs)
-    except Exception as e:
-        error(None, None, e)
-
-
-def answer_async(bot, *args, **kwargs):
-    """Answer an inline query asynchronously"""
-    if 'timeout' not in kwargs:
-        kwargs['timeout'] = TIMEOUT
-
-    try:
-        dispatcher.run_async(bot.answerInlineQuery, *args, **kwargs)
-    except Exception as e:
-        error(None, None, e)
 
 
 def game_is_running(game):
@@ -121,6 +105,7 @@ def user_is_creator_or_admin(user, game, bot, chat):
 
 
 @MWT(timeout=60*60)
-def get_admin_ids(bot, chat_id):
+async def get_admin_ids(bot, chat_id):
     """Returns a list of admin IDs for a given chat. Results are cached for 1 hour."""
-    return [admin.user.id for admin in bot.get_chat_administrators(chat_id)]
+    admins = await bot.get_chat_administrators(chat_id)
+    return [admin.user.id for admin in admins]

@@ -27,7 +27,7 @@ from errors import AlreadyJoinedError, LobbyClosedError, NoGameInChatError, \
     NotEnoughPlayersError
 
 
-class Test(unittest.TestCase):
+class Test(unittest.IsolatedAsyncioTestCase):
 
     game = None
 
@@ -38,9 +38,9 @@ class Test(unittest.TestCase):
         self.chat1 = Chat(1, 'group')
         self.chat2 = Chat(2, 'group')
 
-        self.user0 = User(0, 'user0')
-        self.user1 = User(1, 'user1')
-        self.user2 = User(2, 'user2')
+        self.user0 = User(0, 'user0', is_bot=False)
+        self.user1 = User(1, 'user1', is_bot=False)
+        self.user2 = User(2, 'user2', is_bot=False)
 
     def test_new_game(self):
         g0 = self.gm.new_game(self.chat0)
@@ -49,62 +49,57 @@ class Test(unittest.TestCase):
         self.assertListEqual(self.gm.chatid_games[0], [g0])
         self.assertListEqual(self.gm.chatid_games[1], [g1])
 
-    def test_join_game(self):
+    async def test_join_game(self):
 
-        self.assertRaises(NoGameInChatError,
-                          self.gm.join_game,
-                          *(self.user0, self.chat0))
+        with self.assertRaises(NoGameInChatError):
+            await self.gm.join_game(self.user0, self.chat0)
 
         g0 = self.gm.new_game(self.chat0)
 
-        self.gm.join_game(self.user0, self.chat0)
+        await self.gm.join_game(self.user0, self.chat0)
         self.assertEqual(len(g0.players), 1)
 
-        self.gm.join_game(self.user1, self.chat0)
+        await self.gm.join_game(self.user1, self.chat0)
         self.assertEqual(len(g0.players), 2)
 
         g0.open = False
-        self.assertRaises(LobbyClosedError,
-                          self.gm.join_game,
-                          *(self.user2, self.chat0))
+        with self.assertRaises(LobbyClosedError):
+            await self.gm.join_game(self.user2, self.chat0)
 
         g0.open = True
-        self.assertRaises(AlreadyJoinedError,
-                          self.gm.join_game,
-                          *(self.user1, self.chat0))
+        with self.assertRaises(AlreadyJoinedError):
+            await self.gm.join_game(self.user1, self.chat0)
 
-    def test_leave_game(self):
+    async def test_leave_game(self):
         self.gm.new_game(self.chat0)
 
-        self.gm.join_game(self.user0, self.chat0)
-        self.gm.join_game(self.user1, self.chat0)
+        await self.gm.join_game(self.user0, self.chat0)
+        await self.gm.join_game(self.user1, self.chat0)
 
-        self.assertRaises(NotEnoughPlayersError,
-                          self.gm.leave_game,
-                          *(self.user1, self.chat0))
+        with self.assertRaises(NotEnoughPlayersError):
+            await self.gm.leave_game(self.user1, self.chat0)
 
-        self.gm.join_game(self.user2, self.chat0)
-        self.gm.leave_game(self.user0, self.chat0)
+        await self.gm.join_game(self.user2, self.chat0)
+        await self.gm.leave_game(self.user0, self.chat0)
 
-        self.assertRaises(NoGameInChatError,
-                          self.gm.leave_game,
-                          *(self.user0, self.chat0))
+        with self.assertRaises(NoGameInChatError):
+            await self.gm.leave_game(self.user0, self.chat0)
 
-    def test_end_game(self):
+    async def test_end_game(self):
         self.gm.new_game(self.chat0)
 
-        self.gm.join_game(self.user0, self.chat0)
-        self.gm.join_game(self.user1, self.chat0)
+        await self.gm.join_game(self.user0, self.chat0)
+        await self.gm.join_game(self.user1, self.chat0)
 
         self.assertEqual(len(self.gm.userid_players[0]), 1)
 
         self.gm.new_game(self.chat0)
-        self.gm.join_game(self.user2, self.chat0)
+        await self.gm.join_game(self.user2, self.chat0)
 
-        self.gm.end_game(self.chat0, self.user0)
+        await self.gm.end_game(self.chat0, self.user0)
         self.assertEqual(len(self.gm.chatid_games[0]), 1)
 
-        self.gm.end_game(self.chat0, self.user2)
+        await self.gm.end_game(self.chat0, self.user2)
         self.assertFalse(0 in self.gm.chatid_games)
         self.assertFalse(0 in self.gm.userid_players)
         self.assertFalse(1 in self.gm.userid_players)

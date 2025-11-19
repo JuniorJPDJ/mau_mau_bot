@@ -18,17 +18,13 @@ def get_promotion():
     """ Get a random promotion message """
     return random.choices(list(PROMOTIONS.keys()), weights=list(PROMOTIONS.values()))[0]
 
-def send_promotion(chat, chance=1.0):
+async def send_promotion(chat, chance=1.0):
     """ (Maybe) send a promotion message """
-    if random.random() <= chance:
-        chat.send_message(get_promotion(), parse_mode='HTML')
 
-
-def send_promotion_async(chat, chance=1.0):
-    """ Send a promotion message asynchronously """
-
-    from utils import dispatcher, error
+    from utils import error
     try:
-        dispatcher.run_async(send_promotion, chat, chance=chance)
+        if random.random() <= chance:
+            from shared_vars import application
+            await application.bot.send_message(chat.id, get_promotion(), parse_mode='HTML')
     except Exception as e:
-        error(None, None, e)
+        await error(None, None, e)
