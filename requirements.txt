@@ -1,2 +1,2 @@
-python-telegram-bot[ext,http2]==22.5
+python-telegram-bot[ext,http2]==22.6
 pony==0.7.19
