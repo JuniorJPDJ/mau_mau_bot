@@ -1,7 +1,7 @@
 FROM python:3.14.6-alpine@sha256:003970a263347645cd23d4f90929ad16ba7ce7d808ee4674ffcc93cb21cc289f
 
-# renovate: datasource=repology depName=alpine_3_23/gettext versioning=loose
-ARG         GETTEXT_VERSION="0.24.1-r1"
+# renovate: datasource=repology depName=alpine_3_24/gettext versioning=loose
+ARG         GETTEXT_VERSION="1.0-r0"
 
 WORKDIR     /app
 
