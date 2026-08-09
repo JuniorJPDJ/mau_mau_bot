@@ -8,7 +8,7 @@ telethon = "*"
 
 [packages]
 python-telegram-bot = {version = "==22.8", extras = ["ext", "http2"]}
-pony = "==0.7.19"
+pony = "==0.7.20"
 
 [requires]
 python_version = "3.11"
